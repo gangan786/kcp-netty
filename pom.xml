@@ -19,7 +19,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>8</java.version>
-        <netty.version>4.1.68.Final</netty.version>
+        <!--这里使用Netty的版本是基于开源项目：https://github.com/gangan786/netty  分支：feature/4.1_源码注释学习-->
+        <netty.version>4.1.80.Final-SNAPSHOT</netty.version>
         <slf4j.version>1.7.30</slf4j.version>
     </properties>
 
