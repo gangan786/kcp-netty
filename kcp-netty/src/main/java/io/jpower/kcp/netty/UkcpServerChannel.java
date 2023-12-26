@@ -324,12 +324,19 @@ public final class UkcpServerChannel extends AbstractNioMessageChannel implement
         return ch;
     }
 
+    /**
+     * 通过往NioEventLoop的定时任务队列投递任务，实现循环调用ikcp_update
+     * NioEventLoop存放任务队列的变量是：io.netty.util.concurrent.AbstractScheduledEventExecutor#scheduledTaskQueue
+     * @param tsUpdate
+     * @param current
+     */
     private void scheduleUpdate(int tsUpdate, int current) {
         if (sheduleUpdateLog.isDebugEnabled()) {
             sheduleUpdateLog.debug("schedule delay: " + (tsUpdate - current));
         }
         this.tsUpdate = tsUpdate;
         this.scheduleUpdate = true;
+        // this表示UkcpServerChannel实现了Runnable接口，这个实现里面就包含了io.jpower.kcp.netty.UkcpServerChildChannel.kcpUpdate调用
         eventLoop().schedule(this, tsUpdate - current, TimeUnit.MILLISECONDS);
     }
 
@@ -588,6 +595,7 @@ public final class UkcpServerChannel extends AbstractNioMessageChannel implement
                         CodecOutputList<ByteBuf> recvBufList = null;
                         boolean recv = false;
                         try {
+                            // 将KCP原始数据输入，类似ikcp_input
                             childCh.kcpInput(byteBuf);
                             childCh.kcpTsUpdate(Utils.milliSeconds()); // update kcp
 
@@ -598,6 +606,7 @@ public final class UkcpServerChannel extends AbstractNioMessageChannel implement
                                 while ((peekSize = childCh.kcpPeekSize()) >= 0) {
                                     recv = true;
                                     ByteBuf recvBuf = childAllocator.ioBuffer(peekSize);
+                                    // 去掉KCP协议头信息以后，提取应用层关心的数据，类似ikcp_recv
                                     childCh.kcpReceive(recvBuf);
 
                                     childPipeline.fireChannelRead(recvBuf);
